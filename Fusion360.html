@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Fusion 360 Coach</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Fusion 360 Coach">
+<style>
+:root{--bg:#0b0c0d;--panel:#1c1c1e;--card:rgba(255,255,255,.08);--b:#2c2c2e;--txt:#fff;--muted:#b7bbc0;--accent:#0a84ff;--ok:#30d158;--warn:#ffd60a}
+*{box-sizing:border-box}html,body{height:100%}body{margin:0;font:16px -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Ubuntu,'Helvetica Neue',Arial,sans-serif;background:var(--bg);color:var(--txt)}
+.app{display:flex;flex-direction:column;height:100%}
+.header{padding:14px 18px;display:flex;justify-content:space-between;align-items:center;background:rgba(18,18,18,.85);backdrop-filter:saturate(180%) blur(20px);position:sticky;top:0;z-index:5}
+.title{font-weight:800}
+.tabs{display:flex;gap:8px;padding:10px 12px;background:#111214;border-bottom:1px solid var(--b);position:sticky;top:52px;z-index:4}
+.tab{flex:1;text-align:center;padding:10px 12px;border-radius:12px;background:var(--card);color:#d0d3d7;font-weight:700}
+.tab.active{background:#1c1c1e;border:1px solid var(--b);color:#fff}
+.content{padding:12px;flex:1;overflow:auto}
+.card{background:var(--card);border:1px solid var(--b);border-radius:16px;padding:14px;margin-bottom:12px}
+h2{margin:0 0 6px 0;font-size:18px}.sub{color:var(--muted);font-size:14px}
+.btn{appearance:none;border:0;border-radius:12px;padding:10px 14px;background:var(--accent);color:#fff;font-weight:800}
+.btn.ghost{background:transparent;border:1px solid var(--b);color:#d0d3d7}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.progress{height:8px;border-radius:999px;background:#222;overflow:hidden}
+.progress>div{height:100%;background:linear-gradient(90deg,var(--ok),#34c759)}
+.list{display:flex;flex-direction:column;gap:10px}
+.item{display:flex;align-items:flex-start;gap:10px;padding:10px;border:1px solid var(--b);border-radius:12px;background:#141518}
+.badge{padding:4px 8px;border-radius:999px;background:#1c1c1e;border:1px solid var(--b);color:#d0d3d7;font-weight:700;font-size:12px}
+.kbd{font-family:ui-monospace,Menlo,monospace;background:#1f1f22;border:1px solid #2b2b2f;border-radius:6px;padding:2px 6px}
+label.chk{display:flex;gap:10px;align-items:flex-start}
+label.chk input{margin-top:3px}
+hr{border:0;border-top:1px solid var(--b);margin:10px 0}
+.footer{padding:10px;text-align:center;color:#9aa0a6}
+.win{border-color:#2ea043;background:rgba(46,160,67,.15)}
+.hide{display:none}
+.ico{width:22px;height:22px;min-width:22px;min-height:22px;stroke:currentColor;fill:none;stroke-width:2}
+.stepRow{display:flex;align-items:flex-start;gap:10px}
+.stepText{flex:1}
+.lessonIcon{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:8px;background:#1c1c1e;border:1px solid var(--b);color:#d0d3d7;margin-right:8px}
+</style>
+</head>
+<body>
+<!-- Sprite SVG con le icone (inline, zero dipendenze) -->
+<svg style="display:none" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="i-viewcube" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 9l8 4 8-4M12 13v7"/></symbol>
+  <symbol id="i-orbit" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M2 12c0-5.5 4.5-10 10-10 2.5 0 4.8.9 6.6 2.4M22 12c0 5.5-4.5 10-10 10-2.5 0-4.8-.9-6.6-2.4"/></symbol>
+  <symbol id="i-pan" viewBox="0 0 24 24"><path d="M3 12h18M12 3v18"/><path d="M7 12l-3-3v6zM17 12l3-3v6zM12 7l-3-3h6zM12 17l-3 3h6z"/></symbol>
+  <symbol id="i-zoom" viewBox="0 0 24 24"><circle cx="10" cy="10" r="6"/><path d="M15 15l6 6M7 10h6M10 7v6"/></symbol>
+  <symbol id="i-fit" viewBox="0 0 24 24"><path d="M3 9V3h6M21 9V3h-6M3 15v6h6M21 15v6h-6"/></symbol>
+  <symbol id="i-sketch" viewBox="0 0 24 24"><path d="M4 18l6-14 4 8 6-2-4 8-12 0z"/></symbol>
+  <symbol id="i-rect" viewBox="0 0 24 24"><rect x="4" y="6" width="16" height="12" rx="2"/></symbol>
+  <symbol id="i-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/></symbol>
+  <symbol id="i-constraint" viewBox="0 0 24 24"><path d="M4 12h16M8 8l8 8M16 8l-8 8"/></symbol>
+  <symbol id="i-dim" viewBox="0 0 24 24"><path d="M3 7h18M3 17h18"/><path d="M7 7v10M17 7v10"/></symbol>
+  <symbol id="i-extrude" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="8" rx="2"/><path d="M12 6v4M12 3v2M9 6h6"/></symbol>
+  <symbol id="i-fillet" viewBox="0 0 24 24"><path d="M5 19a10 10 0 0 1 10-10h4"/></symbol>
+  <symbol id="i-chamfer" viewBox="0 0 24 24"><path d="M5 19L19 5"/></symbol>
+  <symbol id="i-param" viewBox="0 0 24 24"><circle cx="6" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="18" cy="12" r="2"/><path d="M8 12h2M14 12h2"/></symbol>
+  <symbol id="i-component" viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7"/><rect x="13" y="13" width="7" height="7"/><path d="M11 11l2 2"/></symbol>
+  <symbol id="i-joint-rigid" viewBox="0 0 24 24"><path d="M6 6h6v6H6zM12 12l6 6"/></symbol>
+  <symbol id="i-joint-slider" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="4" rx="2"/><path d="M8 8v8M16 8v8"/></symbol>
+  <symbol id="i-move" viewBox="0 0 24 24"><path d="M12 2l3 3-3 3-3-3 3-3zM12 19l3 3-3 0-3 0 3-3zM2 12l3-3 3 3-3 3-3-3zM19 12l3-3 0 6-3-3z"/></symbol>
+  <symbol id="i-units" viewBox="0 0 24 24"><path d="M5 5h6v6H5zM13 13h6v6h-6zM13 5h6M5 13h6"/></symbol>
+  <symbol id="i-project" viewBox="0 0 24 24"><path d="M4 6h12v12H4z"/><path d="M10 6v12M4 12h12M18 8h2M18 12h2M18 16h2"/></symbol>
+  <symbol id="i-save" viewBox="0 0 24 24"><path d="M5 5h12l2 2v12H5zM8 5v4h6V5"/></symbol>
+  <symbol id="i-homeview" viewBox="0 0 24 24"><path d="M4 12l8-6 8 6v8H4z"/></symbol>
+</svg>
+
+<div class="app">
+  <div class="header">
+    <div class="title">Fusion 360 Coach</div>
+    <button id="continueBtn" class="btn">Riprendi</button>
+  </div>
+  <div class="tabs">
+    <div class="tab active" data-tab="percorso">Percorso</div>
+    <div class="tab" data-tab="lezione">Lezione</div>
+    <div class="tab" data-tab="quiz">Quiz rapido</div>
+    <div class="tab" data-tab="progressi">Progressi</div>
+  </div>
+  <div class="content">
+    <!-- PERCORSO -->
+    <section id="percorso" class="view">
+      <div class="card">
+        <h2>Piano di studi</h2>
+        <div class="sub">Guida passo-passo per imparare Fusion 360. Ogni lezione ha esercizi pratici e un mini-quiz finale.</div>
+      </div>
+      <div id="curriculum" class="list"></div>
+    </section>
+
+    <!-- LEZIONE -->
+    <section id="lezione" class="view hide">
+      <div class="card" id="lessonHeader">
+        <div class="row">
+          <h2 id="lessonTitle"><span class="lessonIcon"><svg class="ico"><use href="#i-sketch"/></svg></span>Lezione</h2>
+          <span class="badge" id="lessonBadge">0% completata</span>
+        </div>
+        <div class="sub" id="lessonDesc"></div>
+        <div class="progress" style="margin-top:8px"><div id="lessonProg" style="width:0%"></div></div>
+      </div>
+      <div class="card">
+        <h2>Passi</h2>
+        <div class="list" id="stepsList"></div>
+      </div>
+      <div class="card">
+        <div class="row"><h2>Mini-quiz</h2><button id="startQuiz" class="btn">Avvia quiz</button></div>
+        <div id="quizArea"></div>
+      </div>
+      <div class="card row">
+        <button id="finishLesson" class="btn" disabled>Completa lezione</button>
+        <button id="resetLesson" class="btn ghost">Reset</button>
+      </div>
+    </section>
+
+    <!-- QUIZ RAPIDO -->
+    <section id="quiz" class="view hide">
+      <div class="card">
+        <h2>Quiz rapido (misto)</h2>
+        <div class="sub">10 domande a caso dall’intero percorso. 80% = superato.</div>
+      </div>
+      <div id="quickQuiz"></div>
+    </section>
+
+    <!-- PROGRESSI -->
+    <section id="progressi" class="view hide">
+      <div class="card">
+        <h2>Statistiche</h2>
+        <div class="list" id="stats"></div>
+      </div>
+      <div class="card row">
+        <button id="exportBtn" class="btn ghost">Esporta progressi</button>
+        <button id="importBtn" class="btn ghost">Importa</button>
+        <button id="resetAllBtn" class="btn">Azzera tutto</button>
+      </div>
+      <div class="card hide" id="exportCard">
+        <h2>JSON progressi</h2>
+        <textarea id="exportText" style="width:100%;height:140px;background:#0f1012;color:#fff;border:1px solid var(--b);border-radius:12px;padding:10px"></textarea>
+      </div>
+    </section>
+  </div>
+  <div class="footer">Suggerimento: usa il <span class="kbd">ViewCube</span>, <span class="kbd">F</span> per Fit, <span class="kbd">S</span> per Toolbox.</div>
+</div>
+
+<script>
+/* ======= DATI LEZIONI & QUIZ (con icone) ======= */
+const CURRICULUM = [
+  {
+    id:'nav', title:'Interfaccia & Navigazione', minutes:15, icon:'i-viewcube',
+    desc:'Orientamento, ViewCube, orbita/pan/zoom, unità documento.',
+    steps:[
+      {t:'Imposta unità su millimetri', hint:'Document Settings → Units → mm.', icon:'i-units'},
+      {t:'Prova orbita, pan e zoom', hint:'Shift+MMB = pan; Scroll = zoom.', icon:'i-orbit'},
+      {t:'Usa il ViewCube per viste Home/ortogonali', hint:'Click destro sul ViewCube.', icon:'i-homeview'},
+      {t:'Salva in un progetto dedicato', hint:'Data Panel → New Project → Save.', icon:'i-save'}
+    ],
+    quiz:[
+      {q:'Dove cambi le unità del documento?', a:['Document Settings','Browser oggetti','Timeline'], correct:0, why:'Document Settings → Units.'},
+      {q:'Il ViewCube serve a…', a:['Materiali','Navigare tra viste','Creare componenti'], correct:1, why:'Cubo per le viste.'},
+      {q:'Scorciatoia per Fit?', a:['F','Ctrl+F','Shift+F'], correct:0, why:'F = Zoom to Fit.'}
+    ]
+  },
+  {
+    id:'sketch', title:'Sketch di base', minutes:25, icon:'i-sketch',
+    desc:'Create Sketch, forme base, vincoli e quote.',
+    steps:[
+      {t:'Crea uno Sketch sul piano XY', hint:'Create Sketch → seleziona piano.', icon:'i-sketch'},
+      {t:'Disegna un rettangolo (R) e un cerchio (C)', hint:'R & C sulla tastiera.', icon:'i-rect'},
+      {t:'Applica vincoli: Coincident e H/V', hint:'Constraint bar nello Sketch.', icon:'i-constraint'},
+      {t:'Quota diametro e lato con Dimension (D)', hint:'Premi D e clicca l’entità.', icon:'i-dim'}
+    ],
+    quiz:[
+      {q:'A cosa servono i vincoli?', a:['Colorare','Relazioni geometriche','Esportare STL'], correct:1, why:'Allineato, coincidente, ecc.'},
+      {q:'Entità nere =', a:['Definite','Bozza','Mesh'], correct:0, why:'In Fusion: nero = fully constrained.'},
+      {q:'Tasto D fa…', a:['Dimensione','Delete','Distance 3D'], correct:0, why:'D avvia la quota.'}
+    ]
+  },
+  {
+    id:'model', title:'Solidi 3D: Estrudi & Fillet', minutes:25, icon:'i-extrude',
+    desc:'Dal 2D al 3D con Extrude, arrotondamenti e smussi.',
+    steps:[
+      {t:'Finish Sketch e usa Extrude (Join)', hint:'Solid → Create → Extrude.', icon:'i-extrude'},
+      {t:'Applica un Fillet a un bordo', hint:'Modify → Fillet.', icon:'i-fillet'},
+      {t:'Applica un Chamfer ad un altro bordo', hint:'Modify → Chamfer.', icon:'i-chamfer'}
+    ],
+    quiz:[
+      {q:'Extrude “Join” cosa fa?', a:['Unisce a un corpo','Crea componente','Nuovo file'], correct:0, why:'Join = fonde col corpo.'},
+      {q:'Fillet vs Chamfer', a:['Fillet smusso','Fillet raggio','Sono identici'], correct:1, why:'Fillet arrotonda; Chamfer smussa.'}
+    ]
+  },
+  {
+    id:'param', title:'Modello Parametrico', minutes:20, icon:'i-param',
+    desc:'Parametri utente e modifica controllata delle quote.',
+    steps:[
+      {t:'Aggiungi un parametro utente (es. spessore)', hint:'Modify → Change Parameters.', icon:'i-param'},
+      {t:'Usa il parametro in una quota di Sketch', hint:'Scrivi il nome del parametro.', icon:'i-dim'},
+      {t:'Cambia il parametro e rigenera', hint:'Il modello si aggiorna.', icon:'i-param'}
+    ],
+    quiz:[
+      {q:'Dove si creano i parametri?', a:['Design → Preferences','Modify → Change Parameters','Assemble → New Component'], correct:1, why:'Menù Modify.'},
+      {q:'Vantaggio dei parametri?', a:['Rendering','Modifiche controllate','Salvataggio veloce'], correct:1, why:'Variazioni rapide e coerenti.'}
+    ]
+  },
+  {
+    id:'asm', title:'Assiemi & Giunti', minutes:30, icon:'i-component',
+    desc:'Componenti, joints di base (Rigid/Slider).',
+    steps:[
+      {t:'Crea due componenti separati', hint:'Assemble → New Component.', icon:'i-component'},
+      {t:'Posiziona con Move/Copy', hint:'Move/Copy per sistemazione iniziale.', icon:'i-move'},
+      {t:'Joint Rigid tra due facce', hint:'Assemble → Joint → Rigid.', icon:'i-joint-rigid'},
+      {t:'Joint Slider con limiti', hint:'Joint → Slider → Limits.', icon:'i-joint-slider'}
+    ],
+    quiz:[
+      {q:'Body vs Component?', a:['Uguali','Component = unità con origine','Body = cartella mesh'], correct:1, why:'Component = contenitore logico.'},
+      {q:'Quale Joint blocca tutte le DOF?', a:['Rigid','Slider','Revolute'], correct:0, why:'Rigid = 0 DOF.'}
+    ]
+  }
+];
+
+/* ======= STORAGE ======= */
+const STORAGE_KEY='F360Coach_v1';
+const store=()=>JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}');
+const save=(obj)=>localStorage.setItem(STORAGE_KEY,JSON.stringify(obj));
+const getLessonState=(id)=>{const s=store(); return s[id]||{steps:[],quizBest:0,completed:false};}
+const setLessonState=(id,st)=>{const s=store(); s[id]=st; save(s);}
+
+/* ======= UI NAV ======= */
+const views=[...document.querySelectorAll('.view')];
+document.querySelectorAll('.tab').forEach(t=>{
+  t.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));t.classList.add('active');
+    views.forEach(v=>v.classList.add('hide')); document.getElementById(t.dataset.tab).classList.remove('hide');};
+});
+document.getElementById('continueBtn').onclick=()=>{
+  const s=store(); const ids=CURRICULUM.map(x=>x.id); const last=Object.keys(s).reverse().find(k=>ids.includes(k));
+  if(last){ openLesson(last); document.querySelector('[data-tab="lezione"]').click(); }
+};
+
+/* ======= RENDER CURRICULUM (con icone) ======= */
+const curriculumEl=document.getElementById('curriculum');
+function iconSvg(id){ return `<svg class="ico"><use href="#${id}"/></svg>`; }
+function renderCurriculum(){
+  curriculumEl.innerHTML='';
+  CURRICULUM.forEach(les=>{
+    const st=getLessonState(les.id);
+    const stepsDone = st.steps.filter(Boolean).length;
+    const stepsAll = les.steps.length;
+    const pct = Math.round(((stepsDone/stepsAll)*0.7 + (st.quizBest/100)*0.3)*100);
+    const el=document.createElement('div'); el.className='item';
+    el.innerHTML=`
+      <div style="flex:1">
+        <div class="row"><b><span class="lessonIcon">${iconSvg(les.icon)}</span>${les.title}</b><span class="badge">${les.minutes} min</span></div>
+        <div class="sub">${les.desc}</div>
+        <div class="progress" style="margin-top:8px"><div style="width:${pct}%"></div></div>
+        <div class="sub" style="margin-top:6px">Quiz migliore: ${st.quizBest||0}% · Passi: ${stepsDone}/${stepsAll}</div>
+      </div>
+      <div class="grid-2" style="min-width:180px">
+        <button class="btn" data-open="${les.id}">${st.completed?'Rivedi':'Inizia'}</button>
+        <button class="btn ghost" data-reset="${les.id}">Reset</button>
+      </div>`;
+    curriculumEl.appendChild(el);
+  });
+  curriculumEl.querySelectorAll('button[data-open]').forEach(b=>b.onclick=()=>{openLesson(b.dataset.open); document.querySelector('[data-tab="lezione"]').click();});
+  curriculumEl.querySelectorAll('button[data-reset]').forEach(b=>b.onclick=()=>{setLessonState(b.dataset.reset,{steps:[],quizBest:0,completed:false});renderCurriculum();});
+}
+renderCurriculum();
+
+/* ======= LEZIONE ======= */
+let currentLesson=null;
+const lessonTitle=document.getElementById('lessonTitle');
+const lessonDesc=document.getElementById('lessonDesc');
+const lessonProg=document.getElementById('lessonProg');
+const lessonBadge=document.getElementById('lessonBadge');
+const stepsList=document.getElementById('stepsList');
+const finishLesson=document.getElementById('finishLesson');
+const resetLesson=document.getElementById('resetLesson');
+const startQuizBtn=document.getElementById('startQuiz');
+const quizArea=document.getElementById('quizArea');
+
+function openLesson(id){
+  currentLesson = CURRICULUM.find(x=>x.id===id);
+  const st = getLessonState(id);
+  lessonTitle.innerHTML = `<span class="lessonIcon">${iconSvg(currentLesson.icon)}</span>${currentLesson.title}`;
+  lessonDesc.textContent = currentLesson.desc;
+  renderSteps(currentLesson, st);
+  renderLessonQuizSummary(st);
+  updateLessonProgress(currentLesson, st);
+  finishLesson.disabled = !(isStepsComplete(currentLesson, st) && st.quizBest>=80);
+  // bind actions
+  finishLesson.onclick = ()=>{ const s=getLessonState(id); s.completed=true; setLessonState(id,s); renderCurriculum(); updateLessonProgress(currentLesson, s); finishLesson.classList.add('win'); setTimeout(()=>finishLesson.classList.remove('win'),400); };
+  resetLesson.onclick  = ()=>{ setLessonState(id,{steps:[],quizBest:0,completed:false}); openLesson(id); renderCurriculum(); };
+  startQuizBtn.onclick = ()=> renderLessonQuiz(currentLesson);
+}
+function isStepsComplete(les, st){ return (st.steps.filter(Boolean).length >= les.steps.length); }
+function updateLessonProgress(les, st){
+  const stepsDone = st.steps.filter(Boolean).length;
+  const pct = Math.round(((stepsDone/les.steps.length)*0.7 + (st.quizBest/100)*0.3)*100);
+  lessonProg.style.width = pct+'%';
+  lessonBadge.textContent = `${pct}% completata`;
+}
+function renderSteps(les, st){
+  stepsList.innerHTML='';
+  les.steps.forEach((s,i)=>{
+    const done = !!st.steps[i];
+    const row = document.createElement('label'); row.className='chk stepRow';
+    row.innerHTML = `
+      <span class="lessonIcon">${iconSvg(s.icon||'i-sketch')}</span>
+      <input type="checkbox" ${done?'checked':''} />
+      <div class="stepText"><b>${s.t}</b><div class="sub">${s.hint||''}</div></div>
+    `;
+    const box = row.querySelector('input');
+    box.onchange = ()=>{
+      const cur = getLessonState(les.id);
+      cur.steps[i] = box.checked;
+      setLessonState(les.id, cur);
+      updateLessonProgress(les, cur);
+      finishLesson.disabled = !(isStepsComplete(les, cur) && cur.quizBest>=80);
+      if(box.checked) row.classList.add('win'); else row.classList.remove('win');
+    };
+    stepsList.appendChild(row);
+  });
+}
+function renderLessonQuizSummary(st){
+  quizArea.innerHTML = `<div class="sub">Migliore: <b>${st.quizBest||0}%</b>. Premi "Avvia quiz" per rifarlo.</div>`;
+}
+function renderLessonQuiz(les){
+  const qs = les.quiz.map(q=>({...q})); // clone
+  let score=0, idx=0;
+  quizArea.innerHTML='';
+  drawQ();
+  function drawQ(){
+    const q = qs[idx];
+    const card = document.createElement('div'); card.className='item';
+    card.innerHTML = `<div style="flex:1">
+      <div class="row"><b>${q.q}</b><span class="badge">${idx+1}/${qs.length}</span></div>
+      <div class="list" style="margin-top:8px">${q.a.map((opt,i)=>`<button class="btn ghost" data-i="${i}">${opt}</button>`).join('')}</div>
+      <div class="sub" id="why" style="margin-top:8px"></div>
+    </div>`;
+    quizArea.replaceChildren(card);
+    card.querySelectorAll('button[data-i]').forEach(b=>b.onclick=()=>{
+      const i=+b.dataset.i;
+      if(i===q.correct){ score++; b.classList.remove('ghost'); b.classList.add('win'); }
+      document.getElementById('why').textContent = q.why||'';
+      setTimeout(()=>{ idx++; if(idx<qs.length){ drawQ(); } else { end(); } }, 450);
+    });
+  }
+  function end(){
+    const pct = Math.round(100*score/qs.length);
+    const st = getLessonState(les.id);
+    st.quizBest = Math.max(st.quizBest||0, pct);
+    setLessonState(les.id, st);
+    renderLessonQuizSummary(st);
+    updateLessonProgress(les, st);
+    finishLesson.disabled = !(isStepsComplete(les, st) && st.quizBest>=80);
+    const msg = pct>=80 ? 'Superato! 🎉' : 'Riprova per arrivare a 80%.';
+    quizArea.innerHTML = `<div class="item win"><div><b>Punteggio: ${pct}%</b><div class="sub">${msg}</div></div></div>`;
+    renderCurriculum();
+  }
+}
+
+/* ======= QUIZ RAPIDO MISTO ======= */
+const quickQuizDiv = document.getElementById('quickQuiz');
+function renderQuickQuiz(){
+  const pool = CURRICULUM.flatMap(l=>l.quiz.map(q=>({...q})));
+  shuffle(pool);
+  const qs = pool.slice(0,10);
+  let score=0, idx=0;
+  quickQuizDiv.innerHTML='';
+  next();
+  function next(){
+    if(idx>=qs.length){ finish(); return; }
+    const q = qs[idx];
+    const card = document.createElement('div'); card.className='item';
+    card.innerHTML = `<div style="flex:1">
+      <div class="row"><b>${q.q}</b><span class="badge">${idx+1}/10</span></div>
+      <div class="list" style="margin-top:8px">${q.a.map((opt,i)=>`<button class="btn ghost" data-i="${i}">${opt}</button>`).join('')}</div>
+      <div class="sub" id="why" style="margin-top:8px"></div>
+    </div>`;
+    quickQuizDiv.replaceChildren(card);
+    card.querySelectorAll('button[data-i]').forEach(b=>b.onclick=()=>{
+      const i=+b.dataset.i;
+      if(i===q.correct){ score++; b.classList.remove('ghost'); b.classList.add('win'); }
+      document.getElementById('why').textContent = q.why||'';
+      setTimeout(()=>{ idx++; next(); }, 450);
+    });
+  }
+  function finish(){
+    const pct = Math.round(100*score/qs.length);
+    quickQuizDiv.innerHTML = `<div class="item ${pct>=80?'win':''}"><div><b>Risultato: ${pct}%</b><div class="sub">${pct>=80?'Ottimo!':'Punta all’80% per superare.'}</div></div></div>`;
+  }
+}
+renderQuickQuiz();
+
+/* ======= PROGRESSI ======= */
+const statsDiv=document.getElementById('stats');
+const exportBtn=document.getElementById('exportBtn');
+const importBtn=document.getElementById('importBtn');
+const resetAllBtn=document.getElementById('resetAllBtn');
+const exportCard=document.getElementById('exportCard');
+const exportText=document.getElementById('exportText');
+
+function renderStats(){
+  const s=store();
+  const rows = CURRICULUM.map(l=>{
+    const st=s[l.id]||{};
+    const steps = (st.steps||[]).filter(Boolean).length+'/'+l.steps.length;
+    const quiz = st.quizBest||0;
+    const done = st.completed?'✅':'—';
+    return `<div class="item"><div class="row"><b><span class="lessonIcon">${iconSvg(l.icon)}</span>${l.title}</b><span class="badge">${done}</span></div><div class="sub">Passi: ${steps} · Quiz migliore: ${quiz}%</div></div>`;
+  }).join('');
+  statsDiv.innerHTML = rows || '<div class="sub">Nessun progresso ancora.</div>';
+}
+renderStats();
+
+exportBtn.onclick=()=>{ exportCard.classList.remove('hide'); exportText.value = JSON.stringify(store(),null,2); exportText.select(); };
+importBtn.onclick=()=>{ const json=prompt('Incolla il JSON dei progressi:'); if(!json) return; try{ const obj=JSON.parse(json); save(obj); renderCurriculum(); renderStats(); alert('Import ok'); }catch(e){ alert('JSON non valido'); } };
+resetAllBtn.onclick=()=>{ if(confirm('Azzera tutti i progressi?')){ localStorage.removeItem(STORAGE_KEY); renderCurriculum(); renderStats(); if(currentLesson) openLesson(currentLesson.id); } };
+
+/* ======= UTIL ======= */
+function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+</script>
+</body>
+</html>
